@@ -1,0 +1,13 @@
+[package]
+name = "connect-four-rust"
+version = "0.1.0"
+authors = ["Antonio Scotti <zengar@gmail.com>"]
+edition = "2018"
+
+[[bin]]
+name = "connect_four"
+path = "src/main.rs"
+
+[dependencies.pancurses]
+version = "0.16.1"
+features = ["wide"]

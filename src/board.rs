@@ -141,7 +141,7 @@ impl Board {
     fn have_winner_at_index(&self, idx: Index) -> bool {
         return match self.tokens.get(&idx) {
             Some(color) => {
-                // For every possible direction we count how many contigous tokens of the same color
+                // For every possible direction we count how many contiguous tokens of the same color
                 // are present. To win we have to get at least 5 as the starting point will be counted
                 // in both directions. Not the cleanest way.
 

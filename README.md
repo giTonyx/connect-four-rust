@@ -4,3 +4,5 @@
 This project was meant just as a quick exercise to learn Rust.
 
 Status: it's playable (only in hot seat mode) but the interface should really be improved.
+
+![](demo.gif)

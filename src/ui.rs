@@ -40,11 +40,28 @@ impl UI {
         self.window.clear();
         self.window.printw("Connect Four Game\n\n");
 
-        // Todo: add a right arrow (u2192) in front of the current player
+        // Draw players scores
+        if self.current_player == board::Token::YELLOW {
+            self.window.addstr("\u{2192}");
+        } else {
+            self.window.addstr(" ");
+        }
         self.window
-            .printw(format!("Player 1: {:02}\n", self.score_yellow));
+            .printw(format!(" Player 1: {:02} ", self.score_yellow));
+        self.window.attrset(pancurses::COLOR_PAIR(2));
+        self.window.addstr("  \n");
+        self.window.attrset(pancurses::COLOR_PAIR(1));
+
+        if self.current_player == board::Token::RED {
+            self.window.addstr("\u{2192}");
+        } else {
+            self.window.addstr(" ");
+        }
         self.window
-            .printw(format!("Player 2: {:02}\n", self.score_red));
+            .printw(format!(" Player 2: {:02} ", self.score_red));
+        self.window.attrset(pancurses::COLOR_PAIR(3));
+        self.window.addstr("  \n");
+        self.window.attrset(pancurses::COLOR_PAIR(1));
 
         for i in 1..=board::WIDTH {
             self.window.addch(' ');
@@ -56,6 +73,7 @@ impl UI {
         }
         self.window.addch('\n');
 
+        // Draw grid
         for i in 1..=board::HEIGHT {
             // ToDo: can we reverse the range operator instead of using following line?
             let h = board::HEIGHT - i + 1;
@@ -84,6 +102,7 @@ impl UI {
         }
         self.draw_horizontal_line();
 
+        // Footer with instructions
         self.window.addstr("\nPress \u{2190} and \u{2192} to move the arrow, SPACE to play a piece, Q or ESC to quit\n");
 
         self.window.refresh();

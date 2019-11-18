@@ -75,7 +75,6 @@ impl UI {
 
         // Draw grid
         for i in 1..=board::HEIGHT {
-            // ToDo: can we reverse the range operator instead of using following line?
             let h = board::HEIGHT - i + 1;
             self.draw_horizontal_line();
 

@@ -136,9 +136,47 @@ impl UI {
                     }
 
                     self.draw();
-                    self.window.addstr("\n\nVICTORY!!!");
-                    self.window.refresh();
+
+                    match self.window.subwin(13, 13, 10, 15) {
+                        Ok(victory_window) => {
+                            victory_window.addstr("*************");
+                            victory_window.addstr("*           *");
+                            victory_window.addstr("* ");
+
+                            match self.current_player {
+                                board::Token::YELLOW => {
+                                    victory_window.addstr("PLAYER 1");
+                                    victory_window.attrset(pancurses::COLOR_PAIR(2));
+                                    victory_window.addstr(" ");
+                                }
+                                board::Token::RED => {
+                                    victory_window.addstr("PLAYER 2");
+                                    victory_window.attrset(pancurses::COLOR_PAIR(3));
+                                    victory_window.addstr(" ");
+                                }
+                            }
+                            victory_window.attrset(pancurses::COLOR_PAIR(1));
+                            victory_window.addstr(" *");
+
+                            victory_window.addstr("* VICTORY!! *");
+                            victory_window.addstr("*           *");
+                            victory_window.addstr("*************");
+                            victory_window.refresh();
+                        }
+                        Err(_) => (),
+                    }
+
                     std::thread::sleep(time::Duration::from_secs(3));
+
+                    // Consume all input
+                    self.window.timeout(0);
+                    loop {
+                        match self.window.getch() {
+                            Some(_) => (),
+                            None => break,
+                        }
+                    }
+                    self.window.timeout(UI::INPUT_TIMEOUT);
                     self.board.reset();
                 }
 

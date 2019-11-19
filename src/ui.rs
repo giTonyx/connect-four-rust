@@ -119,6 +119,21 @@ impl UI {
         }
     }
 
+    fn reset(&mut self) {
+        std::thread::sleep(time::Duration::from_secs(3));
+
+        // Consume all input
+        self.window.timeout(0);
+        loop {
+            match self.window.getch() {
+                Some(_) => (),
+                None => break,
+            }
+        }
+        self.window.timeout(UI::INPUT_TIMEOUT);
+        self.board.reset();
+    }
+
     fn drop_token(&mut self) {
         match self
             .board
@@ -165,18 +180,25 @@ impl UI {
                         Err(_) => (),
                     }
 
-                    std::thread::sleep(time::Duration::from_secs(3));
+                    self.reset();
+                }
 
-                    // Consume all input
-                    self.window.timeout(0);
-                    loop {
-                        match self.window.getch() {
-                            Some(_) => (),
-                            None => break,
+                // Check if there is a draw
+                if self.board.is_full() {
+                    self.draw();
+
+                    match self.window.subwin(13, 13, 10, 15) {
+                        Ok(draw_window) => {
+                            draw_window.addstr("*************");
+                            draw_window.addstr("*           *");
+                            draw_window.addstr("*   DRAW!   *");
+                            draw_window.addstr("*           *");
+                            draw_window.addstr("*************");
+                            draw_window.refresh();
                         }
+                        Err(_) => (),
                     }
-                    self.window.timeout(UI::INPUT_TIMEOUT);
-                    self.board.reset();
+                    self.reset();
                 }
 
                 // Switch current player (note: we do even if a player won)

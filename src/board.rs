@@ -211,7 +211,31 @@ impl Board {
         }
     }
 
+    pub fn is_full(&self) -> bool {
+        self.tokens.len() == (WIDTH * HEIGHT) as usize
+    }
+
     pub fn reset(&mut self) {
         self.tokens.clear();
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_is_full() {
+        let mut board = Board::new();
+        assert!(!board.is_full());
+        for column in 1..=WIDTH {
+            for _ in 1..=HEIGHT {
+                assert!(!board.is_full());
+                board
+                    .add_token(column, Token::YELLOW)
+                    .expect("could not add token");
+            }
+        }
+        assert!(board.is_full());
     }
 }

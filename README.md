@@ -1,6 +1,8 @@
 # connect-four-rust
 **Connect 4** implementation as a Rust game for terminal
 
+[![Build Status](https://travis-ci.org/giTonyx/connect-four-rust.svg?branch=master)](https://travis-ci.org/giTonyx/connect-four-rust)
+
 This project was just meant as a quick exercise to learn Rust.
 
 Each of the two players can be human or a bot.

@@ -8,6 +8,10 @@ edition = "2018"
 name = "connect_four"
 path = "src/main.rs"
 
+[dependencies]
+rand = "0.7.2"
+clap = "2.33.0"
+
 [dependencies.pancurses]
 version = "0.16.1"
 features = ["wide"]

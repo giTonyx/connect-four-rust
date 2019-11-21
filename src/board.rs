@@ -4,13 +4,13 @@ use std::collections::HashMap;
 pub const WIDTH: u8 = 7;
 pub const HEIGHT: u8 = 6;
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub enum Token {
     YELLOW,
     RED,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 enum Direction {
     INCREASING,
     DECREASING,
@@ -86,14 +86,14 @@ impl Board {
         }
     }
 
-    pub fn add_token(&mut self, column: u8, color: Token) -> Result<bool, &str> {
+    pub fn add_token(&mut self, column: u8, color: &Token) -> Result<bool, &str> {
         if column < 1 || column > WIDTH {
             return Result::Err("out of bounds");
         }
 
         for h in 1..=HEIGHT {
             if !self.tokens.contains_key(&(column, h)) {
-                self.tokens.insert((column, h), color);
+                self.tokens.insert((column, h), color.clone());
                 return Result::Ok(true);
             }
         }
@@ -105,26 +105,24 @@ impl Board {
         self.tokens.get(&(x, y))
     }
 
-    fn linear_step(coord: u8, dir: Direction, bound: u8) -> Option<u8> {
+    fn linear_step(coord: u8, dir: &Direction, bound: u8) -> Option<u8> {
         match match dir {
             STABLE => coord,
             INCREASING => coord + 1,
             DECREASING => coord - 1,
         } {
-            x if x < 1 => None,
-            x if x > bound => None,
-            x => Some(x),
+            x if x >= 1 && x <= bound => Some(x),
+            _ => None,
         }
     }
 
-    fn step(idx: Index, dir: &Direction2D) -> Option<Index> {
+    fn step((x, y): Index, dir: &Direction2D) -> Option<Index> {
         match (
-            Board::linear_step(idx.0, dir.x, WIDTH),
-            Board::linear_step(idx.1, dir.y, HEIGHT),
+            Board::linear_step(x, &dir.x, WIDTH),
+            Board::linear_step(y, &dir.y, HEIGHT),
         ) {
-            (None, _) => None,
-            (_, None) => None,
             (Some(x), Some(y)) => Some((x, y)),
+            _ => None,
         }
     }
 
@@ -139,7 +137,7 @@ impl Board {
     }
 
     fn have_winner_at_index(&self, idx: Index) -> bool {
-        return match self.tokens.get(&idx) {
+        match self.tokens.get(&idx) {
             Some(color) => {
                 // For every possible direction we count how many contiguous tokens of the same color
                 // are present. To win we have to get at least 5 as the starting point will be counted
@@ -187,7 +185,7 @@ impl Board {
                 false
             }
             None => false,
-        };
+        }
     }
 
     fn count_same_color_in_direction(
@@ -196,18 +194,15 @@ impl Board {
         dir: &Direction2D,
         color: &Token,
     ) -> u8 {
-        match idx {
-            Some(index) => match self.tokens.get(&index) {
-                Some(c) => {
-                    if c == color {
-                        1 + self.count_same_color_in_direction(Board::step(index, &dir), dir, color)
-                    } else {
-                        0
-                    }
+        if let Some(index) = idx {
+            match self.tokens.get(&index) {
+                Some(c) if c == color => {
+                    1 + self.count_same_color_in_direction(Board::step(index, &dir), dir, color)
                 }
-                None => 0,
-            },
-            None => 0,
+                _ => 0,
+            }
+        } else {
+            0
         }
     }
 
@@ -232,7 +227,7 @@ mod test {
             for _ in 1..=HEIGHT {
                 assert!(!board.is_full());
                 board
-                    .add_token(column, Token::YELLOW)
+                    .add_token(column, &Token::YELLOW)
                     .expect("could not add token");
             }
         }

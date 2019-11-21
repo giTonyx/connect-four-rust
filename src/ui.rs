@@ -1,20 +1,24 @@
 extern crate pancurses;
 use super::board;
+use crate::interface::{InterfaceObject, Move};
+use std::collections::VecDeque;
 use std::time;
 
 pub struct UI {
     board: board::Board,
-    window: pancurses::Window,
+    pub window: pancurses::Window,
     score_yellow: u8,
     score_red: u8,
     cursor_position: u8,
     current_player: board::Token,
+    player1: InterfaceObject,
+    player2: InterfaceObject,
 }
 
 impl UI {
     const INPUT_TIMEOUT: i32 = 500;
 
-    pub fn new() -> UI {
+    pub fn new(player1: InterfaceObject, player2: InterfaceObject) -> UI {
         UI {
             board: board::Board::new(),
             window: pancurses::initscr(),
@@ -22,6 +26,8 @@ impl UI {
             score_yellow: 0,
             cursor_position: 1,
             current_player: board::Token::YELLOW,
+            player1: player1,
+            player2: player2,
         }
     }
 
@@ -49,8 +55,9 @@ impl UI {
         self.window
             .printw(format!(" Player 1: {:02} ", self.score_yellow));
         self.window.attrset(pancurses::COLOR_PAIR(2));
-        self.window.addstr("  \n");
+        self.window.addstr("  ");
         self.window.attrset(pancurses::COLOR_PAIR(1));
+        self.window.addstr(format!(" ({})\n", self.player1.name()));
 
         if self.current_player == board::Token::RED {
             self.window.addstr("\u{2192}");
@@ -60,8 +67,9 @@ impl UI {
         self.window
             .printw(format!(" Player 2: {:02} ", self.score_red));
         self.window.attrset(pancurses::COLOR_PAIR(3));
-        self.window.addstr("  \n");
+        self.window.addstr("  ");
         self.window.attrset(pancurses::COLOR_PAIR(1));
+        self.window.addstr(format!(" ({})\n", self.player2.name()));
 
         for i in 1..=board::WIDTH {
             self.window.addch(' ');
@@ -74,8 +82,7 @@ impl UI {
         self.window.addch('\n');
 
         // Draw grid
-        for i in 1..=board::HEIGHT {
-            let h = board::HEIGHT - i + 1;
+        for h in (1..=board::HEIGHT).rev() {
             self.draw_horizontal_line();
 
             for x in 1..=board::WIDTH {
@@ -137,11 +144,9 @@ impl UI {
     fn drop_token(&mut self) {
         match self
             .board
-            .add_token(self.cursor_position, self.current_player)
+            .add_token(self.cursor_position, &self.current_player)
         {
             Ok(true) => {
-                // ToDo: add an animation?
-
                 // Check if current player won
                 if self.board.have_winner_at_column(self.cursor_position) {
                     match self.current_player {
@@ -212,6 +217,21 @@ impl UI {
         }
     }
 
+    fn process_moves(&mut self, moves: VecDeque<Move>) {
+        for player_move in moves.iter() {
+            match player_move {
+                Move::LEFT => self.move_left(),
+                Move::RIGHT => self.move_right(),
+                Move::DROP => {
+                    self.drop_token();
+                    break; // Players can only queue a single drop, and must be the last action
+                }
+            }
+            self.draw();
+            std::thread::sleep(time::Duration::from_millis(100));
+        }
+    }
+
     pub fn run(&mut self) {
         self.window.refresh();
         self.window.keypad(true);
@@ -227,14 +247,36 @@ impl UI {
         loop {
             UI::draw(self);
 
-            match self.window.getch() {
-                Some(pancurses::Input::Character('\x1B')) => break,
-                Some(pancurses::Input::Character('q')) => break,
-                Some(pancurses::Input::KeyLeft) => self.move_left(),
-                Some(pancurses::Input::KeyRight) => self.move_right(),
-                Some(pancurses::Input::Character(' ')) => self.drop_token(),
-                Some(_) => (),
-                None => (),
+            self.process_moves(match self.current_player {
+                board::Token::YELLOW => self.player1.play(
+                    &self.board,
+                    self.cursor_position,
+                    board::Token::YELLOW,
+                    &self.window,
+                ),
+                board::Token::RED => self.player2.play(
+                    &self.board,
+                    self.cursor_position,
+                    board::Token::YELLOW,
+                    &self.window,
+                ),
+            });
+
+            // Consume input and check if we have to close
+            let mut shall_close = false;
+            self.window.timeout(0);
+            loop {
+                match self.window.getch() {
+                    Some(pancurses::Input::Character('\x1B')) => shall_close = true,
+                    Some(pancurses::Input::Character('q')) => shall_close = true,
+                    Some(_) => (),
+                    None => break,
+                }
+            }
+            self.window.timeout(UI::INPUT_TIMEOUT);
+
+            if shall_close {
+                break;
             }
         }
 

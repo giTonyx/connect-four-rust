@@ -22,6 +22,6 @@ FLAGS:
 
 OPTIONS:
     -1, --player1 <player1_type>     [default: human]  [possible values: human, random, minimax]
-    -2, --player2 <player2_type>     [default: human]  [possible values: human, random, minimax]    
-    
+    -2, --player2 <player2_type>     [default: human]  [possible values: human, random, minimax]
+   
 ![](demo.gif)

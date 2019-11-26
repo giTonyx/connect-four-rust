@@ -6,7 +6,11 @@
 This project was just meant as a quick exercise to learn Rust.
 
 Each of the two players can be human or a bot.
-So far only a simple bot that plays randomly has been implemented, but the infrastructure is there to implement a more complex AI.
+So far there are two types of bots implemented:
+- random: a bot that plays randomly.
+- minimax: a bot that uses the Minimax algorithm.
+
+But can easily be extended to include more bots with other strategies.
 
 
 USAGE:
@@ -17,8 +21,7 @@ FLAGS:
     -V, --version    Prints version information
 
 OPTIONS:
-    -1, --player1 <player1_type>     [default: human]  [possible values: human, random]
-    -2, --player2 <player2_type>     [default: human]  [possible values: human, random]
-    
+    -1, --player1 <player1_type>     [default: human]  [possible values: human, random, minimax]
+    -2, --player2 <player2_type>     [default: human]  [possible values: human, random, minimax]    
     
 ![](demo.gif)

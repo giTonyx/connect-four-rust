@@ -86,6 +86,71 @@ impl Board {
         }
     }
 
+    fn cell_to_char(&self, x: u8, y: u8) -> char {
+        match self.tokens.get(&(x, y)) {
+            Some(color) => match color {
+                Token::YELLOW => 'Y',
+                Token::RED => 'R',
+            },
+            None => '_',
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn to_string(&self) -> String {
+        let mut value = String::new();
+        for x in 1..=WIDTH {
+            for y in 1..=HEIGHT {
+                value.push(self.cell_to_char(x, y));
+            }
+        }
+        value
+    }
+
+    fn cell_to_number(&self, x: u8, y: u8) -> u128 {
+        match self.tokens.get(&(x, y)) {
+            Some(color) => match color {
+                Token::YELLOW => 1,
+                Token::RED => 2,
+            },
+            None => 0,
+        }
+    }
+
+    pub fn to_number(&self) -> u128 {
+        let mut value = 0;
+        for x in 1..=WIDTH {
+            for y in 1..=HEIGHT {
+                value +=
+                    (3 as u128).pow(((y - 1) * WIDTH + (x - 1)) as u32) * self.cell_to_number(x, y);
+            }
+        }
+        value
+    }
+
+    pub fn from_number(value: u128) -> Board {
+        let mut tokens = HashMap::new();
+        let mut current_value = value;
+
+        for y in 1..=HEIGHT {
+            for x in 1..=WIDTH {
+                let current_cell = current_value % 3;
+                match current_cell {
+                    1 => {
+                        tokens.insert((x, y), Token::YELLOW);
+                    }
+                    2 => {
+                        tokens.insert((x, y), Token::RED);
+                    }
+                    _ => (),
+                }
+                current_value = current_value / 3;
+            }
+        }
+
+        Board { tokens: tokens }
+    }
+
     pub fn add_token(&mut self, column: u8, color: &Token) -> Result<bool, &str> {
         if column < 1 || column > WIDTH {
             return Result::Err("out of bounds");
@@ -220,6 +285,46 @@ mod test {
     use super::*;
 
     #[test]
+    fn test_winner() {
+        let mut board = Board::new();
+        for i in 1..=WIDTH {
+            assert!(board.have_winner_at_column(i) == false);
+        }
+        board
+            .add_token(4, &Token::YELLOW)
+            .expect("could not add token");
+        assert!(board.have_winner_at_column(4) == false);
+        board
+            .add_token(4, &Token::YELLOW)
+            .expect("could not add token");
+        assert!(board.have_winner_at_column(4) == false);
+        board
+            .add_token(4, &Token::YELLOW)
+            .expect("could not add token");
+        assert!(board.have_winner_at_column(4) == false);
+        board
+            .add_token(4, &Token::RED)
+            .expect("could not add token");
+        assert!(board.have_winner_at_column(4) == false);
+        board
+            .add_token(2, &Token::YELLOW)
+            .expect("could not add token");
+        assert!(board.have_winner_at_column(2) == false);
+        board
+            .add_token(2, &Token::YELLOW)
+            .expect("could not add token");
+        assert!(board.have_winner_at_column(2) == false);
+        board
+            .add_token(2, &Token::YELLOW)
+            .expect("could not add token");
+        assert!(board.have_winner_at_column(2) == false);
+        board
+            .add_token(2, &Token::YELLOW)
+            .expect("could not add token");
+        assert!(board.have_winner_at_column(2) == true);
+    }
+
+    #[test]
     fn test_is_full() {
         let mut board = Board::new();
         assert!(!board.is_full());
@@ -232,5 +337,48 @@ mod test {
             }
         }
         assert!(board.is_full());
+    }
+
+    #[test]
+    fn test_serializing() {
+        let mut board = Board::new();
+        let serialized = board.to_number();
+        assert!(serialized == 0);
+        assert!(Board::from_number(serialized).to_number() == serialized);
+        for column in 1..=WIDTH {
+            for row in 1..=HEIGHT {
+                if (row + column) % 2 == 0 {
+                    board
+                        .add_token(column, &Token::YELLOW)
+                        .expect("could not add token");
+                } else {
+                    board
+                        .add_token(column, &Token::RED)
+                        .expect("could not add token");
+                }
+            }
+        }
+        let board_full = Board::from_number(board.to_number());
+        assert!(board_full.is_full());
+        assert!(board_full.to_number() == board.to_number());
+        assert!(board_full.to_number() > 1);
+    }
+
+    #[test]
+    fn test_to_string() {
+        let mut board = Board::new();
+        assert!(board.to_string() == String::from("__________________________________________"));
+        board
+            .add_token(1, &Token::YELLOW)
+            .expect("Could not add token");
+        assert!(board.to_string() == String::from("Y_________________________________________"));
+        board
+            .add_token(1, &Token::RED)
+            .expect("Could not add token");
+        assert!(board.to_string() == String::from("YR________________________________________"));
+        board
+            .add_token(2, &Token::RED)
+            .expect("Could not add token");
+        assert!(board.to_string() == String::from("YR____R___________________________________"));
     }
 }

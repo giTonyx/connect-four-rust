@@ -257,7 +257,7 @@ impl UI {
                 board::Token::RED => self.player2.play(
                     &self.board,
                     self.cursor_position,
-                    board::Token::YELLOW,
+                    board::Token::RED,
                     &self.window,
                 ),
             });

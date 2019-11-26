@@ -24,11 +24,11 @@ impl interface::GameInterface for RandomBot {
         let mut moves = VecDeque::new();
         let target_position = rand::thread_rng().gen_range(1, board::WIDTH + 1);
         if target_position > cursor_position {
-            for _ in cursor_position..=target_position {
+            for _ in cursor_position..target_position {
                 moves.push_back(Move::RIGHT);
             }
         } else {
-            for _ in target_position..=cursor_position {
+            for _ in target_position..cursor_position {
                 moves.push_back(Move::LEFT)
             }
         }
